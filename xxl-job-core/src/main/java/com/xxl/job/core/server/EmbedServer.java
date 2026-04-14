@@ -69,10 +69,10 @@ public class EmbedServer {
                                 @Override
                                 public void initChannel(SocketChannel channel) throws Exception {
                                     channel.pipeline()
-                                            .addLast(new IdleStateHandler(0, 0, 30 * 3, TimeUnit.SECONDS))  // beat 3N, close if idle
+                                            .addLast(new IdleStateHandler(0, 0, 30 * 3, TimeUnit.SECONDS))  // beat 3N, close if idle  空闲检测：90秒无读写，自动断开连接（心跳机制）
                                             .addLast(new HttpServerCodec())
-                                            .addLast(new HttpObjectAggregator(5 * 1024 * 1024))  // merge request & reponse to FULL
-                                            .addLast(new EmbedHttpServerHandler(executorBiz, accessToken, bizThreadPool));
+                                            .addLast(new HttpObjectAggregator(5 * 1024 * 1024))  // merge request & reponse to FULL   HTTP 请求聚合：合并 HTTP 碎片请求为完整请求（最大5M）
+                                            .addLast(new EmbedHttpServerHandler(executorBiz, accessToken, bizThreadPool));  // 业务处理器：处理调度中心的所有请求
                                 }
                             })
                             .childOption(ChannelOption.SO_KEEPALIVE, true);
