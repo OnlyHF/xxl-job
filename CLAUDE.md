@@ -31,7 +31,7 @@ mysql -u root -p < doc/db/tables_xxl_job.sql
 
 # 在 xxl-job-admin/src/main/resources/application.properties 中配置数据库连接
 # 然后运行：
-java -jar xxl-job-admin/target/xxl-job-admin-3.4.0.jar
+java -jar xxl-job-admin/target/xxl-job-admin-3.4.0.study.jar
 
 # 或直接从 Maven 运行
 cd xxl-job-admin
