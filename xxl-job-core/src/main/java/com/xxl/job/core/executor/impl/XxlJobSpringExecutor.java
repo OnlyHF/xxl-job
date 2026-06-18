@@ -48,13 +48,17 @@ public class XxlJobSpringExecutor extends XxlJobExecutor implements ApplicationC
       */
     @Override
     public void afterSingletonsInstantiated() {
+        // 2. XxlJobSpringExecutor 对象实例化之后执行，即：找到带有 @XxlJob 的注解并注入到admin管理服务
 
+        // 扫描容器中带有 @XxlJob 注解的bean与方法，并记录起来
+        // 记录到： ConcurrentMap<String, IJobHandler> jobHandlerRepository = new ConcurrentHashMap<String, IJobHandler>();
         // scan JobHandler method
         scanJobHandlerMethod(applicationContext);
 
         // refresh GlueFactory
         GlueFactory.refreshInstance(1);
 
+        // 3. 启动
         // super start
         try {
             super.start();
@@ -83,6 +87,7 @@ public class XxlJobSpringExecutor extends XxlJobExecutor implements ApplicationC
             return;
         }
 
+        // 过滤不处理的Bean；默认 org.springframework.* 、 spring.* 这两个包下的bean直接跳过不处理
         // 1、build excluded-package list
         List<String> excludedPackageList = new ArrayList<>();
         if (excludedPackage != null) {
@@ -101,6 +106,10 @@ public class XxlJobSpringExecutor extends XxlJobExecutor implements ApplicationC
              * 2.1、skip by BeanDefinition:
              *      - skip excluded-package bean
              *      - skip lazy-init bean
+             *
+             * 2.1、根据 BeanDefinition 过滤掉不符合要求信息，此时只是BeanDefinition，还没有生成对应的Bean对象
+             *      - 指定包路径下的BeanDefinition 则跳过
+             *      - 懒加载的BeanDefinition 则跳过
               */
             if (applicationContext instanceof BeanDefinitionRegistry beanDefinitionRegistry) {
                 // get BeanDefinition
@@ -109,14 +118,14 @@ public class XxlJobSpringExecutor extends XxlJobExecutor implements ApplicationC
                 }
                 BeanDefinition beanDefinition = beanDefinitionRegistry.getBeanDefinition(beanName);
 
-                // skip excluded-package bean
+                // skip excluded-package bean 指定包路径下的BeanDefinition 则跳过
                 String beanClassName = beanDefinition.getBeanClassName();
                 if (isExcluded(excludedPackageList, beanClassName)) {
                     logger.debug(">>>>>>>>>>> xxl-job bean-definition scan, skip excluded-package beanName:{}, beanClassName:{}", beanName, beanClassName);
                     continue;
                 }
 
-                // skip lazy-init bean
+                // skip lazy-init bean 懒加载的BeanDefinition 则跳过
                 if (beanDefinition.isLazyInit()) {
                     logger.debug(">>>>>>>>>>> xxl-job bean-definition scan, skip lazy-init beanName:{}", beanName);
                     continue;
@@ -133,7 +142,7 @@ public class XxlJobSpringExecutor extends XxlJobExecutor implements ApplicationC
                 logger.debug(">>>>>>>>>>> xxl-job bean-definition scan, skip beanClass-null beanName:{}", beanName);
                 continue;
             }
-            // filter method
+            // filter method 获取内部 XxlJob 注解的方法
             Map<Method, XxlJob> annotatedMethods = null;
             try {
                 annotatedMethods = MethodIntrospector.selectMethods(beanClass,
@@ -155,7 +164,7 @@ public class XxlJobSpringExecutor extends XxlJobExecutor implements ApplicationC
             for (Map.Entry<Method, XxlJob> jobMethodEntry : annotatedMethods.entrySet()) {
                 Method jobMethod = jobMethodEntry.getKey();
                 XxlJob xxlJob = jobMethodEntry.getValue();
-                // regist
+                // regist 注册到 jobHandlerRepository  ConcurrentHashMap类型
                 registryJobHandler(xxlJob, jobBean, jobMethod);
             }
 

@@ -88,20 +88,24 @@ public class XxlJobExecutor  {
             return;
         }
 
-        // init logpath
+        // init logpath 本地日志路径
         XxlJobFileAppender.initLogPath(logPath);
 
         // init invoker, admin-client
+        // 初始化 AdminBiz 子实现，动态代码生成，后续是通过http接口调用方式注册到admin的服务上
         initAdminBizList(adminAddresses, accessToken, timeout);
 
 
         // 1、init JobLogFileCleanThread
+        // 启动一个守护线程，每天查询日志文件，最多保留 logRetentionDays 天， logRetentionDays >= 3
         JobLogFileCleanThread.getInstance().start(logRetentionDays);
 
         // 2、init TriggerCallbackThread
+        // 启动一个守护线程，用于处理回调，将结果回调到admin管理端那边
         TriggerCallbackThread.getInstance().start();
 
         // 3、init executor-server
+        // 启动Netty服务，监听端口，注册admin服务（AdminBiz动态子实现）节点启动
         initEmbedServer(address, ip, port, appname, accessToken);
     }
 
@@ -282,6 +286,7 @@ public class XxlJobExecutor  {
         }
 
         // registry jobhandler
+        // 封装为 MethodJobHandler （集成于 IJobHandler），内部使用反射调用
         registryJobHandler(name, new MethodJobHandler(bean, executeMethod, initMethod, destroyMethod));
 
     }
