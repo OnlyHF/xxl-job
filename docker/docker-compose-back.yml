@@ -14,7 +14,7 @@ services:
       - "3306:3306"
     volumes:
       # 说明：仅数据库首次初始化时执行；
-      - ./${XXL_JOB_ADMIN_DIR_NAME}/tables_xxl_job.sql:/docker-entrypoint-initdb.d/tables_xxl_job.sql:ro
+      - ../xxl-job-admin/tables_xxl_job.sql:/docker-entrypoint-initdb.d/tables_xxl_job.sql:ro
       # 3、数据库持久化目录位置，建议自定义：
       - ${MYSQL_PATH}/conf:/etc/mysql/conf.d
       - ${MYSQL_PATH}/logs:/var/log/mysql
@@ -32,9 +32,9 @@ services:
   xxl-job-admin:
     # 4、本地Build设置，如果期望使用推动DockerHub的镜像，可以注释当前启用的image、build配置，并启用如下设置版本的image配置；
     #image: xuxueli/xxl-job-admin:{version}
-    image: qianzb/xxl-job-admin:local
+    image: xuxueli/xxl-job-admin:local
     build:
-      context: ./${XXL_JOB_ADMIN_DIR_NAME}
+      context: ../xxl-job-admin
       dockerfile: Dockerfile
     container_name: xxl-job-admin
     environment:
@@ -54,9 +54,9 @@ services:
       - xxl-job-network
 
   xxl-job-executor-sample-springboot:
-    image: qianzb/xxl-job-executor-sample-springboot:local
+    image: xuxueli/xxl-job-executor-sample-springboot:local
     build:
-      context: ./${XXL_JOB_EXECUTOR_SAMPLE_SPRINGBOOT_DIR_NAME}
+      context: ./xxl-job-executor-samples/xxl-job-executor-sample-springboot
       dockerfile: Dockerfile
     container_name: xxl-job-executor-sample-springboot
     environment:

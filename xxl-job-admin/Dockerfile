@@ -1,9 +1,9 @@
 # base image
 #FROM openjdk:21-jdk-slim
-FROM eclipse-temurin:17-jre
+FROM eclipse-temurin:21-jre
 
 # maintainer
-MAINTAINER xuxueli
+MAINTAINER qianzb
 
 # set params
 ENV PARAMS=""
