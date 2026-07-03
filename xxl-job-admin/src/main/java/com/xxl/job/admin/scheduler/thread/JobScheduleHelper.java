@@ -88,6 +88,13 @@ public class JobScheduleHelper {
                                 if (nowTime > jobInfo.getTriggerNextTime() + PRE_READ_MS) {
                                     // 2.1、trigger-expire > 5s：pass && make next-trigger-time
 
+                                    /*
+                                        调度过期 超过 PRE_READ_MS = 5 秒，则根据配置的 调度过期策略 进行处理
+                                        调度过期策略（MisfireStrategyEnum）有两种：
+                                            1、 DO_NOTHING：不做任何处理，即跳过
+                                            2、 FIRE_ONCE_NOW： 立刻执行一次，即调度过期补偿
+                                     */
+
                                     // 1、misfire handle
                                     MisfireStrategyEnum misfireStrategyEnum = MisfireStrategyEnum.match(jobInfo.getMisfireStrategy(), MisfireStrategyEnum.DO_NOTHING);
                                     misfireStrategyEnum.getMisfireHandler().handle(jobInfo.getId());
@@ -97,6 +104,8 @@ public class JobScheduleHelper {
 
                                 } else if (nowTime >= jobInfo.getTriggerNextTime()) {
                                     // 2.2、trigger-expire < 5s：direct-trigger && make next-trigger-time
+
+                                    // 过期时间小于等于 5 秒，则立即执行，并更新下次执行时间
 
                                     // 1、trigger direct
                                     XxlJobAdminBootstrap.getInstance().getJobTriggerPoolHelper().trigger(jobInfo.getId(), TriggerTypeEnum.CRON, -1, null, null, null);
